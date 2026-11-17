@@ -1,0 +1,75 @@
+{
+  "log": { "loglevel": "warning" },
+  "inbounds": [
+    { "tag": "http-in",  "listen": "0.0.0.0", "port": 7890, "protocol": "http",  "settings": {} },
+    { "tag": "socks-in", "listen": "0.0.0.0", "port": 7891, "protocol": "socks", "settings": { "auth": "noauth", "udp": true } },
+    { "tag": "dns-in", "listen": "0.0.0.0", "port": 1053, "protocol": "dokodemo-door", "settings": { "address": "8.8.8.8", "port": 53, "network": "tcp,udp" } },
+    { "tag": "tp-in", "listen": "0.0.0.0", "port": 7893, "protocol": "dokodemo-door", "settings": { "network": "tcp", "followRedirect": true }, "streamSettings": { "sockopt": { "tproxy": "redirect" } } }
+  ],
+  "outbounds": [
+    {
+      "tag": "proxy",
+      "protocol": "vmess",
+      "settings": {
+        "vnext": [
+          {
+            "address": "your.server.com",
+            "port": 443,
+            "users": [
+              {
+                "id": "00000000-0000-0000-0000-000000000000",
+                "alterId": 0,
+                "security": "auto",
+                "level": 8
+              }
+            ]
+          }
+        ]
+      },
+      "streamSettings": {
+        "network": "tcp",
+        "tcpSettings": {
+          "header": {
+            "type": "http",
+            "request": {
+              "version": "1.1",
+              "method": "GET",
+              "path": ["/"],
+              "headers": {
+                "Host": ["your.disguise.host"],
+                "User-Agent": ["Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.94 Safari/537.36"],
+                "Accept-Encoding": ["gzip, deflate"],
+                "Connection": ["keep-alive"],
+                "Pragma": ["no-cache"]
+              }
+            },
+            "response": {
+              "version": "1.1",
+              "status": "200",
+              "reason": "OK",
+              "headers": {
+                "Content-Type": ["application/octet-stream", "video/mpeg"],
+                "Transfer-Encoding": ["chunked"],
+                "Connection": ["keep-alive"],
+                "Pragma": ["no-cache"]
+              }
+            }
+          }
+        }
+      }
+    },
+    { "tag": "direct", "protocol": "freedom", "settings": {} }
+  ],
+  "routing": {
+    "rules": [
+      {
+        "type": "field",
+        "ip": [
+          "10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16", "127.0.0.0/8",
+          "169.254.0.0/16", "100.64.0.0/10"
+        ],
+        "outboundTag": "direct"
+      }
+    ]
+  }
+}
